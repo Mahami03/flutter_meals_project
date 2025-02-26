@@ -1,0 +1,2 @@
+/Users/misafir/StudioProjects/meals_project/android/app/.cxx/Debug/603e5v5g/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/misafir/StudioProjects/meals_project/android/app/.cxx/Debug/603e5v5g/armeabi-v7a/CMakeFiles/rebuild_cache.dir
