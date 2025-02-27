@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:meals_project/data/dummy_data.dart';
+import 'package:meals_project/providers/favorites_provider.dart';
 import 'package:meals_project/screens/categories.dart';
 import 'package:meals_project/screens/filters.dart';
 import 'package:meals_project/screens/meals.dart';
 import 'package:meals_project/widgets/main_drawer.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meals_project/providers/filter_provider.dart';
 
-import '../models/meal.dart';
 
 const kInitialFilters = {
   Filter.glutenFree: false,
@@ -15,41 +16,32 @@ const kInitialFilters = {
 };
 
 
-class TabsScreen extends StatefulWidget {
+class TabsScreen extends ConsumerStatefulWidget {
   const TabsScreen({super.key});
 
   @override
-  State<TabsScreen> createState() => _TabsScreenState();
+  ConsumerState<TabsScreen> createState() => _TabsScreenState();
 }
 
-class _TabsScreenState extends State<TabsScreen> {
+class _TabsScreenState extends ConsumerState<TabsScreen> {
   int _selectedPageIndex = 0;
-  final List<Meal> _favoriteMeals = [];
-  Map<Filter,bool> _selectedFilters = kInitialFilters;
 
-  void _showInfoMessage(String message){
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-  
-  void _toggleMealFavoriteStatus(Meal meal){
-    final isExisting = _favoriteMeals.contains(meal);
-    
-    if(isExisting){
-      setState(() {
-        _favoriteMeals.remove(meal);
-        _showInfoMessage('Meal is no longer a favorite!');
-      });
+  //void _toggleMealFavoriteStatus(Meal meal){
+    //final isExisting = _favoriteMeals.contains(meal);
 
-    }else{
-      setState(() {
-        _favoriteMeals.add(meal);
-        _showInfoMessage('Marked as a favorite!');
-      });
-    }
-  }
+    //if(isExisting){
+      //setState(() {
+        //_favoriteMeals.remove(meal);
+        //_showInfoMessage('Meal is no longer a favorite!');
+      //});
+
+    //}else{
+//      setState(() {
+  //      _favoriteMeals.add(meal);
+    //    _showInfoMessage('Marked as a favorite!');
+      //});
+    //}
+  //}
 
   void _selectPage(int index){
     setState(() {
@@ -60,46 +52,28 @@ class _TabsScreenState extends State<TabsScreen> {
   void _setScreen(String identifier) async {
     Navigator.of(context).pop();
     if (identifier == 'filters'){
-      final result = await Navigator.of(context).push<Map<Filter,bool>>(
+      await Navigator.of(context).push<Map<Filter,bool>>(
           MaterialPageRoute(
-            builder: (ctx) =>  FiltersScreen(currentState: _selectedFilters,),
+            builder: (ctx) =>  const FiltersScreen(),
           ),
       );
-      setState(() {
-        _selectedFilters = result ?? kInitialFilters;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
 
-    final availableMeals = dummyMeals.where((meal) {
-      if (_selectedFilters[Filter.lactoseFree]! && !meal.isLactoseFree){
-        return false;
-      }
-      if (_selectedFilters[Filter.lactoseFree]! && !meal.isLactoseFree){
-        return false;
-      }
-      if (_selectedFilters[Filter.vegetarian]! && !meal.isVegetarian){
-        return false;
-      }
-      if (_selectedFilters[Filter.vegan]! && !meal.isVegan){
-        return false;
-      }
-      return true;
-    }).toList();
+    final availableMeals = ref.watch(filteredMealsProvider);
 
     Widget activePage =  CategoriesScreen(
-      onToggleFavorite: _toggleMealFavoriteStatus,
       availableMeals: availableMeals,
     );
     var activePageTitle = 'Categories';
 
     if (_selectedPageIndex == 1){
+      final favoriteMeals = ref.watch(favoriteMealsProvider);
       activePage =  MealsScreen(
-        meals: _favoriteMeals,
-        onToggleFavorite: _toggleMealFavoriteStatus
+        meals: favoriteMeals,
       );
       activePageTitle = 'Your Favorites';
     }
@@ -115,7 +89,7 @@ class _TabsScreenState extends State<TabsScreen> {
         currentIndex: _selectedPageIndex,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.set_meal),label: 'Categories'),
-          BottomNavigationBarItem(icon: Icon(Icons.star),label: 'Favorites'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite),label: 'Favorites'),
         ],
       ),
     );
